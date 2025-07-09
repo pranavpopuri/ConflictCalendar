@@ -5,6 +5,7 @@ export interface ICourse extends Document {
     startTime: number;
     endTime: number;
     days: Array<'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday'>;
+    user: mongoose.Types.ObjectId;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -27,6 +28,11 @@ const courseSchema: Schema<ICourse> = new Schema(
             type: [String],
             required: true,
             enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        },
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
         }
     },
     {

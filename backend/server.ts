@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from "express";
 import dotenv from "dotenv";
 import { connectDB } from './config/db';
 import courseRoutes from './routes/course.route';
+import authRoutes from './routes/auth.route';
 import path from "path";
 
 dotenv.config();
@@ -20,6 +21,7 @@ const isProduction = process.env.NODE_ENV?.trim() === "production";
 console.log("isProduction:", isProduction);
 
 // API routes (put these BEFORE the catch-all route)
+app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 
 if (isProduction) {

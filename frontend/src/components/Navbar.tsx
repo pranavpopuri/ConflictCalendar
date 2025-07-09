@@ -1,4 +1,14 @@
+import { LogOut, User } from "lucide-react";
+import { useAuthStore } from "../store/auth";
+import { Button } from "@/components/ui/button";
+
 const Navbar = () => {
+    const { user, logout } = useAuthStore();
+
+    const handleLogout = () => {
+        logout();
+    };
+
     return (
         <div
             className="w-full h-16 flex items-center justify-between px-6 md:px-8 border-b shadow-sm"
@@ -24,8 +34,31 @@ const Navbar = () => {
                     Conflict Calendar
                 </h1>
             </div>
+
+            {/* Right side - User info and logout */}
+            <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-2">
+                    <User size={18} style={{ color: "oklch(0.5 0.08 220)" }} />
+                    <span className="text-sm font-medium" style={{ color: "oklch(0.4 0.1 220)" }}>
+                        {user?.username}
+                    </span>
+                </div>
+                <Button
+                    onClick={handleLogout}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    style={{
+                        borderColor: "oklch(0.7 0.05 220)",
+                        color: "oklch(0.4 0.1 220)"
+                    }}
+                >
+                    <LogOut size={16} />
+                    <span className="hidden sm:inline">Logout</span>
+                </Button>
+            </div>
         </div>
-    )
-}
+    );
+};
 
 export default Navbar;

@@ -1,4 +1,5 @@
 import { useCourseStore } from "../store/course";
+import { useAuthStore } from "../store/auth";
 import React from "react";
 
 interface Course {
@@ -15,6 +16,7 @@ interface CourseCardProps {
 
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
     const { deleteCourse, getConflictingCourses } = useCourseStore();
+    const { token } = useAuthStore();
     const conflictingCourseIds = getConflictingCourses();
     const hasConflict = conflictingCourseIds.includes(course._id);
 
@@ -25,7 +27,12 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
     };
 
     const handleDeleteCourse = async (cid: string) => {
-        const { success, message } = await deleteCourse(cid);
+        if (!token) {
+            console.error("No authentication token available");
+            return;
+        }
+
+        const { success, message } = await deleteCourse(cid, token);
         if (!success) {
             // @ts-ignore
             window.toast?.({

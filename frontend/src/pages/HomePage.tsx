@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { CalendarCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCourseStore } from "../store/course";
+import { useAuthStore } from "../store/auth";
 import CourseCard from "../components/CourseCard";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 const HomePage = () => {
+    const { token } = useAuthStore();
 
     const [newCourse, setNewCourse] = useState({
         name: "",
@@ -23,8 +25,10 @@ const HomePage = () => {
     const { createCourse, fetchCourses, courses } = useCourseStore();
 
     useEffect(() => {
-        fetchCourses();
-    }, [fetchCourses]);
+        if (token) {
+            fetchCourses(token);
+        }
+    }, [fetchCourses, token]);
 
     const handleDayChange = (day: string, checked: boolean) => {
         setNewCourse(prev => ({
@@ -107,8 +111,13 @@ const HomePage = () => {
 
     const handleAddProduct = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
+        if (!token) {
+            console.error("No authentication token available");
+            return;
+        }
+
         console.log("Sending course data:", newCourse); // Debug log
-        const { success, message } = await createCourse(newCourse);
+        const { success, message } = await createCourse(newCourse, token);
         console.log("Success", success);
         console.log("Message", message);
 

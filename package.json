@@ -5,7 +5,9 @@
     "start": "set NODE_ENV=production && tsx backend/server.ts"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.12",
     "@types/react-big-calendar": "^1.16.2",
     "ts-node": "^10.9.2",
@@ -13,9 +15,12 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "dotenv": "^17.1.0",
     "express": "^5.1.0",
+    "express-validator": "^7.2.1",
     "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.2",
     "npm": "^11.4.2"

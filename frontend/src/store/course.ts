@@ -11,10 +11,10 @@ export interface Course {
 export interface CourseStore {
 	courses: Course[];
 	setCourses: (courses: Course[]) => void;
-	createCourse: (newCourse: Omit<Course, "_id">) => Promise<{ success: boolean; message: string }>;
-	fetchCourses: () => Promise<void>;
-	deleteCourse: (pid: string) => Promise<{ success: boolean; message: string }>;
-	updateCourse: (pid: string, updatedCourse: Partial<Omit<Course, "_id">>) => Promise<{ success: boolean; message: string }>;
+	createCourse: (newCourse: Omit<Course, "_id">, token: string) => Promise<{ success: boolean; message: string }>;
+	fetchCourses: (token: string) => Promise<void>;
+	deleteCourse: (pid: string, token: string) => Promise<{ success: boolean; message: string }>;
+	updateCourse: (pid: string, updatedCourse: Partial<Omit<Course, "_id">>, token: string) => Promise<{ success: boolean; message: string }>;
 	getConflictingCourses: () => string[];
 	hasTimeConflict: (course1: Course, course2: Course) => boolean;
 }
@@ -39,7 +39,7 @@ const hasTimeConflict = (course1: Course, course2: Course): boolean => {
 export const useCourseStore = create<CourseStore>((set) => ({
 	courses: [],
 	setCourses: (courses) => set({ courses }),
-	createCourse: async (newCourse) => {
+	createCourse: async (newCourse, token) => {
 		if (!newCourse.name || !newCourse.startTime || !newCourse.endTime || !newCourse.days) {
 			return { success: false, message: "Please fill in all fields." };
 		}
@@ -58,6 +58,7 @@ export const useCourseStore = create<CourseStore>((set) => ({
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
+					"Authorization": `Bearer ${token}`,
 				},
 				body: JSON.stringify(newCourse),
 			});
@@ -73,14 +74,27 @@ export const useCourseStore = create<CourseStore>((set) => ({
 			return { success: false, message: "Failed to connect to server. Make sure the backend is running." };
 		}
 	},
-	fetchCourses: async () => {
-		const res = await fetch("/api/courses");
-		const data = await res.json();
-		set({ courses: data.data });
+	fetchCourses: async (token) => {
+		try {
+			const res = await fetch("/api/courses", {
+				headers: {
+					"Authorization": `Bearer ${token}`,
+				},
+			});
+			const data = await res.json();
+			if (data.success) {
+				set({ courses: data.data });
+			}
+		} catch (error) {
+			console.error("Failed to fetch courses:", error);
+		}
 	},
-	deleteCourse: async (pid) => {
+	deleteCourse: async (pid, token) => {
 		const res = await fetch(`/api/courses/${pid}`, {
 			method: "DELETE",
+			headers: {
+				"Authorization": `Bearer ${token}`,
+			},
 		});
 		const data = await res.json();
 		if (!data.success) return { success: false, message: data.message };
@@ -88,11 +102,12 @@ export const useCourseStore = create<CourseStore>((set) => ({
 		set((state) => ({ courses: state.courses.filter((course) => course._id !== pid) }));
 		return { success: true, message: data.message };
 	},
-	updateCourse: async (pid, updatedCourse) => {
+	updateCourse: async (pid, updatedCourse, token) => {
 		const res = await fetch(`/api/courses/${pid}`, {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
+				"Authorization": `Bearer ${token}`,
 			},
 			body: JSON.stringify(updatedCourse),
 		});
