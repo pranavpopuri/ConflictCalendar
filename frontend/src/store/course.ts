@@ -15,7 +15,26 @@ export interface CourseStore {
 	fetchCourses: () => Promise<void>;
 	deleteCourse: (pid: string) => Promise<{ success: boolean; message: string }>;
 	updateCourse: (pid: string, updatedCourse: Partial<Omit<Course, "_id">>) => Promise<{ success: boolean; message: string }>;
+	getConflictingCourses: () => string[];
+	hasTimeConflict: (course1: Course, course2: Course) => boolean;
 }
+
+// Helper function to check if two courses have time conflicts
+const hasTimeConflict = (course1: Course, course2: Course): boolean => {
+	// Check if they share any common days
+	const commonDays = course1.days.some(day => course2.days.includes(day));
+	if (!commonDays) return false;
+
+	// Check if times overlap
+	// Convert to minutes for easier comparison
+	const start1 = course1.startTime;
+	const end1 = course1.endTime;
+	const start2 = course2.startTime;
+	const end2 = course2.endTime;
+
+	// Check if there's any overlap: start1 < end2 && start2 < end1
+	return start1 < end2 && start2 < end1;
+};
 
 export const useCourseStore = create<CourseStore>((set) => ({
 	courses: [],
@@ -24,6 +43,16 @@ export const useCourseStore = create<CourseStore>((set) => ({
 		if (!newCourse.name || !newCourse.startTime || !newCourse.endTime || !newCourse.days) {
 			return { success: false, message: "Please fill in all fields." };
 		}
+
+		// Check for duplicate course names (case-insensitive)
+		const existingCourse = useCourseStore.getState().courses.find(
+			course => course.name.toLowerCase().trim() === newCourse.name.toLowerCase().trim()
+		);
+
+		if (existingCourse) {
+			return { success: false, message: "A course with this name already exists. Please choose a different name." };
+		}
+
 		try {
 			const res = await fetch("/api/courses", {
 				method: "POST",
@@ -76,4 +105,24 @@ export const useCourseStore = create<CourseStore>((set) => ({
 
 		return { success: true, message: data.message };
 	},
+	getConflictingCourses: () => {
+		const state = useCourseStore.getState();
+		const conflictingIds: string[] = [];
+
+		for (let i = 0; i < state.courses.length; i++) {
+			for (let j = i + 1; j < state.courses.length; j++) {
+				if (hasTimeConflict(state.courses[i], state.courses[j])) {
+					if (!conflictingIds.includes(state.courses[i]._id)) {
+						conflictingIds.push(state.courses[i]._id);
+					}
+					if (!conflictingIds.includes(state.courses[j]._id)) {
+						conflictingIds.push(state.courses[j]._id);
+					}
+				}
+			}
+		}
+
+		return conflictingIds;
+	},
+	hasTimeConflict: hasTimeConflict,
 }));
