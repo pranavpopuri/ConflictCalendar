@@ -2,7 +2,6 @@ import mongoose, { Document, Schema, Model } from "mongoose";
 
 export interface ICourse extends Document {
     name: string;
-    id: string;
     startTime: number;
     endTime: number;
     days: Array<'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday'>;
@@ -13,10 +12,6 @@ export interface ICourse extends Document {
 const courseSchema: Schema<ICourse> = new Schema(
     {
         name: {
-            type: String,
-            required: true,
-        },
-        id: {
             type: String,
             required: true,
         },

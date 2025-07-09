@@ -1,13 +1,19 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-
+import Navbar from "./components/Navbar";
+import HomePage from './pages/HomePage';
+import CalendarPage from './pages/CalendarPage';
+import { Route, Routes } from "react-router-dom";
 
 const App = () => {
   return (
     <div>
-      Hi
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
+      </Routes>
     </div>
   )
 }
 
-export default App
+export default App;
+
