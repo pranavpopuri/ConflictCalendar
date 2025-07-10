@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 export interface IUser extends mongoose.Document {
     username: string;
     email: string;
     password: string;
+    passwordResetToken?: string;
+    passwordResetExpires?: Date;
     createdAt: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
+    generatePasswordResetToken(): string;
 }
 
 const UserSchema = new mongoose.Schema<IUser>({
@@ -30,6 +34,14 @@ const UserSchema = new mongoose.Schema<IUser>({
         type: String,
         required: [true, "Password is required"],
         minlength: [6, "Password must be at least 6 characters long"]
+    },
+    passwordResetToken: {
+        type: String,
+        default: undefined
+    },
+    passwordResetExpires: {
+        type: Date,
+        default: undefined
     }
 }, {
     timestamps: true
@@ -51,6 +63,16 @@ UserSchema.pre<IUser>("save", async function (next) {
 // Method to compare passwords
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
     return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to generate password reset token
+UserSchema.methods.generatePasswordResetToken = function (): string {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    return resetToken;
 };
 
 export default mongoose.model<IUser>("User", UserSchema);

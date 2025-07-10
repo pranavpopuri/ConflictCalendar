@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from './pages/HomePage';
 import Calendar from './components/Calendar';
 import AuthForm from './components/AuthForm';
+import { PasswordResetPage } from './pages/PasswordResetPage';
 import { useAuthStore } from './store/auth';
 
 const App = () => {
@@ -30,16 +32,27 @@ const App = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return <AuthForm onAuthSuccess={() => {}} />;
-  }
-
   return (
-    <>
-      <Navbar />
-      <HomePage />
-      <Calendar />
-    </>
+    <Router>
+      <Routes>
+        <Route path="/reset-password" element={<PasswordResetPage />} />
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              <div>
+                <Navbar />
+                <HomePage />
+                <Calendar />
+              </div>
+            ) : (
+              <AuthForm onAuthSuccess={() => {}} />
+            )
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 };
 

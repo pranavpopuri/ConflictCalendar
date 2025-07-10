@@ -14,49 +14,48 @@ app.use(express.json());
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
-console.log("🚀 Starting ConflictCalendar Server...");
+console.log("Starting server...");
 
-// API routes MUST come first
+// API routes FIRST (very important!)
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 
-// Static files and SPA routing
+// Static files and frontend routing
 const staticPath = path.join(__dirname, "frontend", "dist");
 const indexPath = path.resolve(__dirname, "frontend", "dist", "index.html");
 
-console.log("📁 Static path:", staticPath);
-console.log("📄 Index path:", indexPath);
-console.log("✅ Static exists:", fs.existsSync(staticPath));
-console.log("✅ Index exists:", fs.existsSync(indexPath));
+console.log("Static path:", staticPath);
+console.log("Index path:", indexPath);
+console.log("Static exists:", fs.existsSync(staticPath));
+console.log("Index exists:", fs.existsSync(indexPath));
 
 if (fs.existsSync(staticPath) && fs.existsSync(indexPath)) {
-    // Serve static files (CSS, JS, images, etc.)
+    console.log("✅ Frontend build found, setting up routing...");
+
+    // Serve static files
     app.use(express.static(staticPath));
 
-    // Handle SPA routing - serve index.html for all non-API routes
-    app.use('/', (req: Request, res: Response, next) => {
+    // ALL non-API routes should serve index.html
+    app.get('*', (req: Request, res: Response) => {
         // Skip API routes
         if (req.path.startsWith('/api/')) {
-            return next();
-        }
-
-        // Skip static files (they have extensions)
-        if (req.path.includes('.')) {
-            return next();
+            return res.status(404).json({ error: 'API route not found' });
         }
 
         console.log("📄 Serving index.html for:", req.path);
         res.sendFile(indexPath);
     });
+
+    console.log("✅ Frontend routing configured");
 } else {
-    console.log("❌ Frontend build not found!");
+    console.log("❌ Frontend build not found");
     app.get("/", (req: Request, res: Response) => {
-        res.status(404).send("Frontend build not found. Please run 'npm run build' first.");
+        res.json({ message: "API server running - no frontend build found" });
     });
 }
 
 app.listen(PORT, () => {
     connectDB();
-    console.log(`🌟 Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Server started at http://localhost:${PORT}`);
     console.log(`🔗 Test reset password: http://localhost:${PORT}/reset-password`);
 });

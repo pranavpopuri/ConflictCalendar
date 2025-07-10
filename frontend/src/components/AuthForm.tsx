@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "../store/auth";
+import { PasswordResetForm } from "./PasswordResetForm";
 
 interface AuthFormProps {
   onAuthSuccess: () => void;
@@ -11,6 +12,7 @@ interface AuthFormProps {
 const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -58,6 +60,26 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
     setError("");
     setFormData({ username: "", email: "", password: "" });
   };
+
+  // Show password reset form
+  if (showPasswordReset) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "oklch(0.99 0.005 220)" }}>
+        <div className="w-full max-w-md">
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 md:p-8"
+            style={{
+              backgroundColor: "oklch(0.98 0.01 250)",
+              borderColor: "oklch(0.9 0.02 220)",
+              border: "1px solid"
+            }}
+          >
+            <PasswordResetForm onBack={() => setShowPasswordReset(false)} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "oklch(0.99 0.005 220)" }}>
@@ -158,6 +180,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
                 </p>
               )}
             </div>
+
+            {isLogin && (
+              <div className="text-right">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordReset(true)}
+                  className="text-sm font-medium hover:underline"
+                  style={{ color: "oklch(0.6 0.15 250)" }}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
 
             <Button
               type="submit"
