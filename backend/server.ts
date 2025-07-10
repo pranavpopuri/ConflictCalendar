@@ -16,6 +16,16 @@ const __dirname = path.resolve();
 
 console.log("🚀 Starting ConflictCalendar Server...");
 
+// Health check endpoint
+app.get('/api/health', (req: Request, res: Response) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        message: 'Service is running'
+    });
+});
+
 // API routes MUST come first
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
