@@ -127,7 +127,20 @@ class EmailService {
     }
 
     async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
-        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+        // Determine the correct frontend URL based on environment
+        let frontendUrl = process.env.FRONTEND_URL;
+
+        // Fallback logic for different environments
+        if (!frontendUrl) {
+            const isProduction = process.env.NODE_ENV === 'production';
+            frontendUrl = isProduction
+                ? 'https://conflictcalendar.onrender.com'
+                : 'http://localhost:5000';
+        }
+
+        console.log('🔗 Using frontend URL for reset link:', frontendUrl);
+
+        const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
         const html = `
       <!DOCTYPE html>
