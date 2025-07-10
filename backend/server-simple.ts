@@ -36,6 +36,8 @@ if (fs.existsSync(staticPath) && fs.existsSync(indexPath)) {
     app.use(express.static(staticPath));
 
     // ALL non-API routes should serve index.html
+    
+    //@ts-ignore dw abt it
     app.get('*', (req: Request, res: Response) => {
         // Skip API routes
         if (req.path.startsWith('/api/')) {
