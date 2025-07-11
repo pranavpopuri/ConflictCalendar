@@ -1,64 +1,82 @@
 # Installation
 
-This guide will walk you through setting up ConflictCalendar for development and production.
+Quick setup guide for ConflictCalendar development.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+- Node.js 18+
+- npm
+- MongoDB (local or Atlas)
 
-- **Node.js** (version 18.0 or above)
-- **npm** (comes with Node.js)
-- **MongoDB** (local installation or MongoDB Atlas account)
-- **Git** for version control
+## Setup
 
-## Development Setup
-
-### 1. Clone the Repository
-
+### 1. Clone and Install
 ```bash
-git clone https://github.com/hipranav7/ConflictCalendar.git
+git clone https://github.com/pranavpopuri/ConflictCalendar.git
 cd ConflictCalendar
-```
-
-### 2. Install Dependencies
-
-Install dependencies for both backend and frontend:
-
-```bash
-# Install root/backend dependencies
 npm install
-
-# Install frontend dependencies
-npm install --prefix frontend
+cd frontend && npm install
 ```
 
-### 3. Environment Configuration
+### 2. Environment Variables
+Create `.env` in the backend directory:
+```env
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+EMAIL_HOST=your_smtp_host
+EMAIL_PORT=587
+EMAIL_USER=your_email_username
+EMAIL_PASS=your_email_password
+EMAIL_FROM=your_sender_email
+```
 
-Create a `.env` file in the root directory with the following variables:
-
+### 3. Run Development
 ```bash
-# Database Configuration
-MONGO_URI=mongodb://localhost:27017/conflictcalendar
-# Or for MongoDB Atlas:
-# MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/conflictcalendar
+# Start backend (port 5000)
+npm run dev
 
-# Server Configuration
-PORT=5000
-JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
+# Start frontend (port 5173) - in new terminal
+npm run dev:client
+```
 
-# Email Configuration (Choose one provider)
-# Gmail Configuration
+### 4. Build for Production
+```bash
+npm run build
+npm start
+```
+
+## Project Structure
+
+```
+backend/
+├── controllers/     # Route handlers
+├── models/         # MongoDB schemas
+├── routes/         # API route definitions
+├── middleware/     # Auth and validation
+├── services/       # Email and external services
+├── config/         # Database configuration
+└── server.ts       # Express app setup
+
+frontend/
+├── src/
+│   ├── components/ # React components
+│   ├── pages/      # Page components
+│   ├── store/      # Zustand state management
+│   └── lib/        # Utilities and helpers
+├── public/         # Static assets
+└── dist/           # Built files (after npm run build)
+```
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
 EMAIL_FROM=your-email@gmail.com
 
-# Mailtrap Configuration (for testing)
-# EMAIL_HOST=smtp.mailtrap.io
-# EMAIL_PORT=2525
-# EMAIL_USER=your-mailtrap-username
-# EMAIL_PASS=your-mailtrap-password
+# Ethereal Email Configuration (for testing)
+# EMAIL_HOST=smtp.ethereal.email
+# EMAIL_PORT=587
+# EMAIL_USER=auto-generated-user
+# EMAIL_PASS=auto-generated-password
 # EMAIL_FROM=noreply@conflictcalendar.com
 
 # Frontend URL for reset links
@@ -91,11 +109,9 @@ FRONTEND_URL=http://localhost:5173
    - Generate password for "Mail"
 3. Use the app password in `EMAIL_PASS`
 
-#### Mailtrap Setup (Development/Testing)
+#### Ethereal Email Setup (Development/Testing)
 
-1. Sign up at [Mailtrap](https://mailtrap.io/)
-2. Create a new inbox
-3. Copy the SMTP credentials to your `.env` file
+ConflictCalendar's email service automatically configures Ethereal Email for testing when Gmail credentials are not provided. Ethereal is a fake SMTP service that captures emails without sending them.
 
 ### 6. Start Development Servers
 

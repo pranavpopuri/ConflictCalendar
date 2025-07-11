@@ -1,84 +1,108 @@
 # Environment Setup
 
-This guide provides detailed instructions for setting up different environments for ConflictCalendar development and deployment.
+This guide covers setting up your development environment for ConflictCalendar.
 
-## Development Environment
+## Prerequisites
 
-### Local Development Setup
+- **Node.js** (v18 or higher)
+- **MongoDB** (local installation or MongoDB Atlas)
+- **Git**
+- **Code Editor** (VS Code recommended)
 
-#### 1. Prerequisites Installation
+## Installation Steps
 
-**Node.js and npm**
-```bash
-# Check if Node.js is installed
-node --version  # Should be 18.0+
-npm --version
-
-# If not installed, download from https://nodejs.org/
-```
-
-**MongoDB Setup (Choose One)**
-
-**Option A: Local MongoDB**
-```bash
-# Ubuntu/Debian
-sudo apt-get install mongodb
-
-# macOS (using Homebrew)
-brew tap mongodb/brew
-brew install mongodb-community
-
-# Windows - Download from MongoDB website
-```
-
-**Option B: MongoDB Atlas (Recommended)**
-1. Sign up at [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Create a free tier cluster
-3. Configure network access (whitelist your IP)
-4. Create database user
-5. Get connection string
-
-#### 2. Project Setup
+### 1. Clone Repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/hipranav7/ConflictCalendar.git
+git clone https://github.com/pranavpopuri/ConflictCalendar.git
 cd ConflictCalendar
-
-# Install dependencies
-npm install
-cd frontend && npm install && cd ..
 ```
 
-#### 3. Environment Configuration
-
-Create `.env` file in the project root:
+### 2. Install Dependencies
 
 ```bash
-# Development Environment Variables
-NODE_ENV=development
+# Install root dependencies
+npm install
 
-# Database
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+
+# Install documentation dependencies (optional)
+cd docs
+npm install
+cd ..
+```
+
+### 3. Environment Configuration
+
+Create `.env` file in the root directory:
+
+```bash
+# Database Configuration
 MONGO_URI=mongodb://localhost:27017/conflictcalendar
-# Or MongoDB Atlas:
-# MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/conflictcalendar
 
-# Server
-PORT=5000
-JWT_SECRET=dev_jwt_secret_change_in_production
+# JWT Configuration
+JWT_SECRET=your_very_secure_jwt_secret_at_least_32_characters
 
-# Email (Mailtrap for development)
-EMAIL_HOST=smtp.mailtrap.io
-EMAIL_PORT=2525
-EMAIL_USER=your-mailtrap-user
-EMAIL_PASS=your-mailtrap-pass
-EMAIL_FROM=noreply@conflictcalendar.dev
+# Email Configuration (Gmail for production)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-gmail@gmail.com
+EMAIL_PASS=your-gmail-app-password
+EMAIL_FROM=noreply@conflictcalendar.com
 
-# Frontend
+# Application URLs
 FRONTEND_URL=http://localhost:5173
 ```
 
-#### 4. Development Workflow
+### 4. Database Setup
+
+#### Local MongoDB
+
+1. **Install MongoDB Community**:
+   - Download from [mongodb.com](https://www.mongodb.com/try/download/community)
+   - Follow installation instructions for your OS
+
+2. **Start MongoDB Service**:
+   ```bash
+   # Windows
+   net start MongoDB
+
+   # macOS
+   brew services start mongodb/brew/mongodb-community
+
+   # Linux
+   sudo systemctl start mongod
+   ```
+
+#### MongoDB Atlas (Cloud)
+
+1. **Create Account**: Sign up at [mongodb.com/atlas](https://www.mongodb.com/atlas)
+2. **Create Cluster**: Choose free tier
+3. **Setup Network Access**: Add your IP (0.0.0.0/0 for development)
+4. **Create Database User**: With read/write permissions
+5. **Get Connection String**: Update `.env` with Atlas URI
+
+### 5. Email Configuration
+
+#### Gmail Setup (Recommended)
+
+1. **Enable 2-Factor Authentication** on your Gmail account
+2. **Generate App Password**:
+   - Go to Google Account settings
+   - Security → 2-Step Verification → App passwords
+   - Generate password for "Mail"
+3. **Update .env file** with Gmail credentials
+
+#### Development Email Testing
+
+ConflictCalendar automatically uses Ethereal Email for testing when Gmail credentials aren't provided. No additional setup required for development.
+
+## Running the Application
+
+### Development Mode
 
 ```bash
 # Terminal 1: Start backend
@@ -89,249 +113,64 @@ cd frontend
 npm run dev
 ```
 
-**Development URLs:**
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:5000
-- Mailtrap inbox: https://mailtrap.io/inboxes
+Application will be available at:
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:5000
 
-### IDE Configuration
-
-#### VS Code Setup
-
-Recommended extensions:
-```json
-{
-  "recommendations": [
-    "ms-vscode.vscode-typescript-next",
-    "esbenp.prettier-vscode",
-    "ms-vscode.vscode-eslint",
-    "bradlc.vscode-tailwindcss",
-    "ms-vscode.vscode-json"
-  ]
-}
-```
-
-#### Settings
-
-Create `.vscode/settings.json`:
-```json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "eslint.validate": ["javascript", "typescript", "javascriptreact", "typescriptreact"]
-}
-```
-
-## Testing Environment
-
-### Test Database Setup
-
-Create a separate test database:
+### Production Build
 
 ```bash
-# Test Environment Variables (.env.test)
-NODE_ENV=test
-MONGO_URI=mongodb://localhost:27017/conflictcalendar_test
-JWT_SECRET=test_jwt_secret
-EMAIL_HOST=smtp.mailtrap.io
-EMAIL_PORT=2525
-EMAIL_USER=test-user
-EMAIL_PASS=test-pass
-EMAIL_FROM=test@conflictcalendar.dev
-FRONTEND_URL=http://localhost:3000
-```
-
-### Running Tests
-
-```bash
-# Run backend tests
-npm test
-
-# Run frontend tests
+# Build frontend
 cd frontend
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-## Staging Environment
-
-### Staging Configuration
-
-Create `.env.staging`:
-
-```bash
-NODE_ENV=staging
-MONGO_URI=mongodb+srv://staging-user:pass@staging-cluster.mongodb.net/conflictcalendar
-JWT_SECRET=staging_jwt_secret_different_from_prod
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=staging@yourdomain.com
-EMAIL_PASS=staging-app-password
-EMAIL_FROM=staging@yourdomain.com
-FRONTEND_URL=https://staging.conflictcalendar.com
-```
-
-### Staging Deployment
-
-```bash
-# Build for staging
 npm run build
-
-# Deploy to staging server
-npm run deploy:staging
-```
-
-## Production Environment
-
-### Production Configuration
-
-Create `.env.production`:
-
-```bash
-NODE_ENV=production
-MONGO_URI=mongodb+srv://prod-user:secure-pass@prod-cluster.mongodb.net/conflictcalendar
-JWT_SECRET=very_secure_production_jwt_secret_32chars_minimum
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=noreply@yourdomain.com
-EMAIL_PASS=production-app-password
-EMAIL_FROM=noreply@yourdomain.com
-FRONTEND_URL=https://conflictcalendar.com
-```
-
-### Production Deployment
-
-```bash
-# Build optimized production bundle
-npm run build
+cd ..
 
 # Start production server
 npm start
 ```
 
-## Docker Environment (Optional)
+## Development Tools
 
-### Docker Compose Setup
+### Database Management
 
-Create `docker-compose.yml`:
+- **MongoDB Compass**: GUI for MongoDB
+- **VS Code Extensions**: MongoDB for VS Code
 
-```yaml
-version: '3.8'
-services:
-  mongodb:
-    image: mongo:6.0
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: conflictcalendar
+### API Testing
 
-  backend:
-    build: .
-    ports:
-      - "5000:5000"
-    depends_on:
-      - mongodb
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/conflictcalendar
-      - NODE_ENV=development
-    volumes:
-      - .:/app
-      - /app/node_modules
-
-volumes:
-  mongodb_data:
-```
-
-### Docker Commands
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# Rebuild services
-docker-compose up --build
-```
-
-## Environment Variables Reference
-
-### Required Variables
-
-| Variable       | Development    | Staging        | Production  |
-| -------------- | -------------- | -------------- | ----------- |
-| `MONGO_URI`    | Local/Atlas    | Atlas          | Atlas       |
-| `JWT_SECRET`   | Simple         | Secure         | Very Secure |
-| `EMAIL_*`      | Mailtrap       | Gmail          | Gmail       |
-| `FRONTEND_URL` | localhost:5173 | staging.domain | domain.com  |
-
-### Security Considerations
-
-**Development:**
-- Use simple secrets for convenience
-- Mailtrap for email testing
-- Local MongoDB acceptable
-
-**Staging:**
-- Mirror production setup
-- Use separate database
-- Test email delivery
-
-**Production:**
-- Strong, unique secrets
-- Production email service
-- Secure database with authentication
-- HTTPS only
+- **Thunder Client** (VS Code extension)
+- **Postman**
+- **Insomnia**
 
 ## Troubleshooting
 
-### Common Environment Issues
+### Common Issues
 
 **MongoDB Connection Failed**
+- Verify MongoDB service is running
+- Check connection string format
+- Ensure database permissions are correct
+
+**Email Not Sending**
+- Verify Gmail app password (not regular password)
+- Check 2-factor authentication is enabled
+- Ensure EMAIL_* variables are set correctly
+
+**Frontend Build Errors**
+- Clear node_modules and reinstall
+- Check Node.js version compatibility
+- Verify all dependencies are installed
+
+### Environment Variables
+
+Always verify your `.env` file contains all required variables:
+
 ```bash
-# Check MongoDB service
-sudo systemctl status mongod
-
-# Check connection string
-echo $MONGO_URI
+# Check if all variables are set
+node -e "
+const required = ['MONGO_URI', 'JWT_SECRET'];
+required.forEach(key => {
+  if (!process.env[key]) console.error(\`Missing: \${key}\`);
+});
+"
 ```
-
-**Port Already in Use**
-```bash
-# Find and kill process
-lsof -ti:5000 | xargs kill -9
-
-# Use different port
-export PORT=5001
-```
-
-**Email Not Working**
-```bash
-# Test email configuration
-node -e "console.log(process.env.EMAIL_HOST)"
-
-# Check Mailtrap inbox
-# Check Gmail app password
-```
-
-**Environment Variables Not Loading**
-```bash
-# Check .env file exists
-ls -la .env
-
-# Verify dotenv is loading
-node -e "require('dotenv').config(); console.log(process.env.NODE_ENV)"
-```
-
----
-
-Next: [User Guide - Authentication](user-guide/authentication)

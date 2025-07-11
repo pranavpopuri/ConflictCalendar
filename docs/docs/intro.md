@@ -4,30 +4,56 @@ sidebar_position: 1
 
 # ConflictCalendar Documentation
 
-Welcome to the ConflictCalendar documentation! This comprehensive guide will help you understand, deploy, and contribute to the ConflictCalendar application.
+ConflictCalendar is a course scheduling application with conflict detection, built with React + TypeScript frontend and Express + MongoDB backend.
 
-## What is ConflictCalendar?
+## Architecture Overview
 
-ConflictCalendar is a full-stack web application designed to help users manage course schedules and detect scheduling conflicts. It provides an intuitive interface for course management with real-time conflict detection and calendar visualization.
+### Backend (`/backend`)
+- **Express.js API** with TypeScript
+- **MongoDB** database with Mongoose ODM
+- **JWT authentication** with password reset
+- **Email service** for notifications
 
-## Key Features
+### Frontend (`/frontend`)
+- **React 19** with TypeScript and Vite
+- **Tailwind CSS** for styling
+- **React Router** for navigation
+- **Zustand** for state management
 
-- **User Authentication**: Secure user registration, login, and password reset functionality
-- **Course Management**: Create, edit, and delete courses with detailed scheduling information
-- **Conflict Detection**: Automatic detection of scheduling conflicts between courses
-- **Calendar Visualization**: Interactive calendar interface using React Big Calendar
-- **Email Integration**: Password reset via email with configurable SMTP providers
-- **Responsive Design**: Modern UI built with React, TypeScript, and Tailwind CSS
+## Core Features
 
-## Technology Stack
+- User authentication (register/login/reset password)
+- Course CRUD operations with time/day scheduling
+- Real-time conflict detection between courses
+- Calendar visualization interface
 
-### Backend
-- **Runtime**: Node.js with TypeScript
-- **Framework**: Express.js
-- **Database**: MongoDB with Mongoose ODM
-- **Authentication**: JWT (JSON Web Tokens)
-- **Email**: Nodemailer with support for Gmail, Mailtrap, and other SMTP providers
-- **Validation**: Express Validator
+## Quick Start
+
+### Environment Setup
+Create `.env` in the backend directory:
+```env
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+EMAIL_HOST=your_smtp_host
+EMAIL_PORT=587
+EMAIL_USER=your_email_username
+EMAIL_PASS=your_email_password
+EMAIL_FROM=your_sender_email
+```
+
+### Development Commands
+```bash
+# Install dependencies
+npm install
+cd frontend && npm install
+
+# Run development servers
+npm run dev        # Backend on :5000
+npm run dev:client # Frontend on :5173
+
+# Build for production
+npm run build      # Builds frontend to /dist
+```
 
 ### Frontend
 - **Framework**: React 19 with TypeScript

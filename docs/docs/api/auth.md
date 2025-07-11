@@ -1,244 +1,148 @@
 # Authentication API
 
-Authentication endpoints for user registration, login, and password management.
+Authentication endpoints implemented in `/backend/controllers/auth.controller.ts`.
 
-## POST /auth/register
+## Registration {#register}
 
-Register a new user account.
+**POST** `/api/auth/register`
 
-### Request
+```typescript
+// Controller implementation
+export const register = async (req: Request, res: Response) => {
+  const { username, email, password } = req.body
 
-```http
-POST /api/auth/register
-Content-Type: application/json
+  // Check if user exists
+  const existingUser = await User.findOne({ $or: [{ email }, { username }] })
 
+  // Create new user (password auto-hashed in pre-save middleware)
+  const user = new User({ username, email, password })
+  await user.save()
+
+  const token = generateToken(user._id.toString())
+  res.status(201).json({ success: true, data: { token, user } })
+}
+```
+
+**Request:**
+```json
 {
   "username": "johndoe",
   "email": "john@example.com",
-  "password": "securepassword"
+  "password": "securepass"
 }
 ```
 
-### Request Body
-
-| Field      | Type   | Required | Description                                      |
-| ---------- | ------ | -------- | ------------------------------------------------ |
-| `username` | string | Yes      | Username (3-50 chars, alphanumeric + underscore) |
-| `email`    | string | Yes      | Valid email address                              |
-| `password` | string | Yes      | Password (minimum 6 characters)                  |
-
-### Response
-
-**Success (201 Created):**
-
+**Response (201):**
 ```json
 {
-  "message": "User registered successfully",
-  "user": {
-    "id": "64f5a1b2c3d4e5f6a7b8c9d0",
-    "username": "johndoe",
-    "email": "john@example.com"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "success": true,
+  "data": {
+    "token": "jwt_token_here",
+    "user": { "id": "...", "username": "johndoe", "email": "john@example.com" }
+  }
 }
 ```
 
-**Error (400 Bad Request):**
+## Login {#login}
 
+**POST** `/api/auth/login`
+
+```typescript
+// Controller implementation
+export const login = async (req: Request, res: Response) => {
+  const { email, password } = req.body
+
+  const user = await User.findOne({ email })
+  const isMatch = await user.comparePassword(password) // bcrypt comparison
+
+  const token = generateToken(user._id.toString())
+  res.json({ success: true, data: { token, user } })
+}
+```
+
+**Request:**
 ```json
-{
-  "errors": [
-    {
-      "field": "email",
-      "message": "Email already exists"
-    }
-  ]
-}
-```
-
-### Validation Rules
-
-- **Username**: 3-50 characters, letters, numbers, underscores only
-- **Email**: Valid email format, must be unique
-- **Password**: Minimum 6 characters
-
----
-
-## POST /auth/login
-
-Authenticate user and receive JWT token.
-
-### Request
-
-```http
-POST /api/auth/login
-Content-Type: application/json
-
 {
   "email": "john@example.com",
-  "password": "securepassword"
+  "password": "securepass"
 }
 ```
 
-### Request Body
+## Password Reset Request {#forgot-password}
 
-| Field      | Type   | Required | Description              |
-| ---------- | ------ | -------- | ------------------------ |
-| `email`    | string | Yes      | Registered email address |
-| `password` | string | Yes      | User password            |
+**POST** `/api/auth/forgot-password`
 
-### Response
+```typescript
+// Controller implementation
+export const requestPasswordReset = async (req: Request, res: Response) => {
+  const { email } = req.body
+  const user = await User.findOne({ email })
 
-**Success (200 OK):**
+  if (!user) {
+    // Always return success to prevent email enumeration
+    return res.json({ success: true, message: "Reset link sent if account exists" })
+  }
 
-```json
-{
-  "message": "Login successful",
-  "user": {
-    "id": "64f5a1b2c3d4e5f6a7b8c9d0",
-    "username": "johndoe",
-    "email": "john@example.com"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  const resetToken = user.generatePasswordResetToken() // Creates hashed token + expiry
+  await user.save()
+
+  await emailService.sendPasswordResetEmail(email, resetToken)
+  res.json({ success: true, message: "Reset link sent if account exists" })
 }
 ```
 
-**Error (401 Unauthorized):**
+## Password Reset Completion {#reset-password}
 
-```json
-{
-  "message": "Invalid credentials"
+**POST** `/api/auth/reset-password`
+
+```typescript
+// Controller implementation
+export const resetPassword = async (req: Request, res: Response) => {
+  const { token, password } = req.body
+
+  // Hash token to match stored version
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() }
+  })
+
+  user.password = password // Auto-hashed in pre-save middleware
+  user.passwordResetToken = undefined
+  user.passwordResetExpires = undefined
+  await user.save()
 }
 ```
 
----
+## Get Current User
 
-## POST /auth/forgot-password
+**GET** `/api/auth/me`
 
-Request password reset email.
-
-### Request
-
-```http
-POST /api/auth/forgot-password
-Content-Type: application/json
-
-{
-  "email": "john@example.com"
+```typescript
+// Requires authenticate middleware
+export const getMe = async (req: AuthRequest, res: Response) => {
+  // req.user populated by authenticate middleware
+  res.json({ success: true, data: { user: req.user } })
 }
 ```
 
-### Request Body
+## Validation Rules
 
-| Field   | Type   | Required | Description              |
-| ------- | ------ | -------- | ------------------------ |
-| `email` | string | Yes      | Registered email address |
+Defined in `/backend/controllers/auth.controller.ts`:
 
-### Response
+```typescript
+export const registerValidation = [
+  body("username")
+    .isLength({ min: 3, max: 50 })
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage("Username: 3-50 chars, alphanumeric + underscore only"),
+  body("email").isEmail().withMessage("Valid email required"),
+  body("password").isLength({ min: 6 }).withMessage("Password: min 6 chars")
+]
 
-**Success (200 OK):**
-
-```json
-{
-  "message": "Password reset email sent"
-}
+export const loginValidation = [
+  body("email").isEmail().withMessage("Valid email required"),
+  body("password").notEmpty().withMessage("Password required")
+]
 ```
-
-**Error (404 Not Found):**
-
-```json
-{
-  "message": "User not found"
-}
-```
-
-### Email Content
-
-The reset email contains:
-
-- Secure reset link with token
-- Token expires in 1 hour
-- Link format: `{FRONTEND_URL}/reset-password?token={reset_token}`
-
----
-
-## POST /auth/reset-password
-
-Complete password reset with token.
-
-### Request
-
-```http
-POST /api/auth/reset-password
-Content-Type: application/json
-
-{
-  "token": "abc123def456...",
-  "password": "newpassword",
-  "confirmPassword": "newpassword"
-}
-```
-
-### Request Body
-
-| Field             | Type   | Required | Description                    |
-| ----------------- | ------ | -------- | ------------------------------ |
-| `token`           | string | Yes      | Reset token from email         |
-| `password`        | string | Yes      | New password (minimum 6 chars) |
-| `confirmPassword` | string | Yes      | Password confirmation          |
-
-### Response
-
-**Success (200 OK):**
-
-```json
-{
-  "message": "Password reset successful"
-}
-```
-
-**Error (400 Bad Request):**
-
-```json
-{
-  "message": "Invalid or expired reset token"
-}
-```
-
-### Security Notes
-
-- Reset tokens are cryptographically secure (32 bytes)
-- Tokens are hashed before storage in database
-- Tokens expire after 1 hour
-- Tokens are single-use (deleted after successful reset)
-
----
-
-## Implementation Details
-
-### JWT Token Structure
-
-```json
-{
-  "userId": "64f5a1b2c3d4e5f6a7b8c9d0",
-  "iat": 1693123456,
-  "exp": 1693728256
-}
-```
-
-- **Expiration**: 7 days from issue
-- **Algorithm**: HS256
-- **Storage**: Client localStorage
-
-### Password Security
-
-- **Hashing**: bcrypt with 10 salt rounds
-- **Storage**: Only hashed passwords in database
-- **Validation**: Plain text never stored or logged
-
-### Reset Token Security
-
-- **Generation**: `crypto.randomBytes(32).toString('hex')`
-- **Hashing**: bcrypt before database storage
-- **Expiration**: 1 hour from generation
-- **Cleanup**: Expired tokens removed periodically

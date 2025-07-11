@@ -1,53 +1,149 @@
 # Course API
 
-Course management endpoints for creating, reading, updating, and deleting courses.
+Course management endpoints implemented in `/backend/controllers/course.controller.ts`.
 
-## GET /courses
+## Get User Courses {#get-courses}
 
-Retrieve all courses for the authenticated user.
+**GET** `/api/courses`
 
-### Request
-
-```http
-GET /api/courses
-Authorization: Bearer <jwt-token>
+```typescript
+// Controller implementation
+export const getCourses = async (req: AuthRequest, res: Response) => {
+  // req.user populated by authenticate middleware
+  const courses = await Course.find({ user: req.user._id })
+  res.status(200).json({ success: true, data: courses })
+}
 ```
 
-### Headers
+**Headers:** `Authorization: Bearer <jwt_token>`
 
-| Header          | Value                | Required |
-| --------------- | -------------------- | -------- |
-| `Authorization` | `Bearer <jwt-token>` | Yes      |
-
-### Response
-
-**Success (200 OK):**
-
+**Response (200):**
 ```json
 {
-  "courses": [
+  "success": true,
+  "data": [
     {
-      "_id": "64f5a1b2c3d4e5f6a7b8c9d0",
-      "title": "Introduction to Computer Science",
-      "instructor": "Dr. Smith",
+      "_id": "...",
+      "name": "Computer Science 101",
+      "startTime": 900,    // Minutes from midnight (9:00 AM)
+      "endTime": 1050,     // Minutes from midnight (10:30 AM)
       "days": ["Monday", "Wednesday", "Friday"],
-      "startTime": "09:00",
-      "endTime": "10:30",
-      "startDate": "2024-01-15T00:00:00.000Z",
-      "endDate": "2024-05-15T00:00:00.000Z",
-      "userId": "64f5a1b2c3d4e5f6a7b8c9d1",
-      "createdAt": "2024-01-01T12:00:00.000Z",
-      "updatedAt": "2024-01-01T12:00:00.000Z"
+      "user": "user_id",
+      "createdAt": "2024-01-01T12:00:00.000Z"
     }
   ]
 }
 ```
 
-**Error (401 Unauthorized):**
+## Create Course {#create-course}
 
+**POST** `/api/courses`
+
+```typescript
+// Controller implementation
+export const createCourse = async (req: AuthRequest, res: Response) => {
+  const course = req.body
+
+  // Validate required fields
+  if (!course.name || !course.startTime || !course.endTime || !course.days) {
+    return res.status(400).json({ success: false, message: "Missing required fields" })
+  }
+
+  const newCourse = new Course({ ...course, user: req.user._id })
+  await newCourse.save()
+
+  res.status(201).json({ success: true, data: newCourse })
+}
+```
+
+**Request:**
 ```json
 {
-  "message": "Access denied. No token provided."
+  "name": "Physics 201",
+  "startTime": 780,   // 1:00 PM (780 minutes from midnight)
+  "endTime": 950,     // 3:50 PM
+  "days": ["Tuesday", "Thursday"]
+}
+```
+
+## Update Course {#update-course}
+
+**PUT** `/api/courses/:id`
+
+```typescript
+// Controller implementation
+export const updateCourse = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params
+  const course = req.body
+
+  const existingCourse = await Course.findById(id)
+
+  // Check ownership
+  if (existingCourse.user.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ success: false, message: "Not authorized" })
+  }
+
+  const updatedCourse = await Course.findByIdAndUpdate(id, course, { new: true })
+  res.status(200).json({ success: true, data: updatedCourse })
+}
+```
+
+## Delete Course {#delete-course}
+
+**DELETE** `/api/courses/:id`
+
+```typescript
+// Controller implementation
+export const deleteCourse = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params
+
+  const existingCourse = await Course.findById(id)
+
+  // Check ownership
+  if (existingCourse.user.toString() !== req.user._id.toString()) {
+    return res.status(403).json({ success: false, message: "Not authorized" })
+  }
+
+  await Course.findByIdAndDelete(id)
+  res.status(200).json({ success: true, message: "Course deleted" })
+}
+```
+
+## Course Schema
+
+Defined in `/backend/models/course.model.ts`:
+
+```typescript
+export interface ICourse extends Document {
+  name: string
+  startTime: number      // Minutes from midnight
+  endTime: number        // Minutes from midnight
+  days: Array<'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday'>
+  user: mongoose.Types.ObjectId  // Reference to User
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+const courseSchema = new Schema({
+  name: { type: String, required: true },
+  startTime: { type: Number, required: true },
+  endTime: { type: Number, required: true },
+  days: {
+    type: [String],
+    required: true,
+    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+  },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+}, { timestamps: true })
+```
+
+## Time Format
+
+- **startTime/endTime**: Stored as minutes from midnight (0-1439)
+- **Example conversions:**
+  - 9:00 AM = 540 minutes
+  - 1:30 PM = 810 minutes
+  - 11:45 PM = 1425 minutes
 }
 ```
 

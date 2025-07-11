@@ -142,7 +142,6 @@ The documentation can be deployed to:
 
 - **GitHub Pages**: Free hosting for GitHub repositories
 - **Netlify**: Automatic builds from Git
-- **Vercel**: Zero-config static site hosting
 - **Custom Server**: Serve the `build/` directory
 
 ### GitHub Pages Deployment

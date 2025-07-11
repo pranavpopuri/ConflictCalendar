@@ -56,23 +56,18 @@ EMAIL_FROM=your-email@gmail.com
 2. Generate App Password in Google Account settings
 3. Use the 16-character app password (not your regular password)
 
-#### Mailtrap Configuration (Development)
+#### Ethereal Email (Development)
+
+For development and testing, ConflictCalendar automatically configures Ethereal Email when Gmail credentials are not provided:
 
 ```bash
-EMAIL_HOST=smtp.mailtrap.io
-EMAIL_PORT=2525
-EMAIL_USER=your-mailtrap-username
-EMAIL_PASS=your-mailtrap-password
-EMAIL_FROM=noreply@conflictcalendar.com
+# Ethereal is configured automatically
+# No manual setup required for development
 ```
 
-#### Other SMTP Providers
+#### Production Email Requirements
 
-ConflictCalendar works with any SMTP provider. Popular options include:
-
-- **SendGrid**: `smtp.sendgrid.net:587`
-- **Mailgun**: `smtp.mailgun.org:587`
-- **Amazon SES**: `email-smtp.region.amazonaws.com:587`
+ConflictCalendar is configured for Gmail in production. Ensure you have:
 
 ### Frontend Configuration
 
