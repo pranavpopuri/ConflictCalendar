@@ -1,8 +1,30 @@
+/**
+ * @fileoverview Course Controller - Handles course management operations
+ * @description Provides CRUD operations for course management including creation,
+ * retrieval, updating, and deletion of courses. All operations are user-scoped
+ * to ensure data isolation between users.
+ * @author ConflictCalendar Team
+ * @version 1.0.0
+ */
+
 import { Response } from "express";
 import mongoose from "mongoose";
 import Course from "../models/course.model";
 import { AuthRequest } from "../middleware/auth";
 
+/**
+ * Retrieves all courses for the authenticated user
+ * @description Fetches all courses associated with the current user's account
+ * @param {AuthRequest} req - Express request object with authenticated user
+ * @param {User} req.user - Authenticated user object from middleware
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response with array of user's courses
+ * @throws {401} User not authenticated
+ * @throws {500} Internal server error
+ * @example
+ * GET /api/courses
+ * Headers: { Authorization: "Bearer <jwt_token>" }
+ */
 export const getCourses = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
@@ -18,6 +40,32 @@ export const getCourses = async (req: AuthRequest, res: Response): Promise<void>
     }
 };
 
+/**
+ * Creates a new course for the authenticated user
+ * @description Creates a new course with validation and associates it with the current user
+ * @param {AuthRequest} req - Express request object with authenticated user and course data
+ * @param {User} req.user - Authenticated user object from middleware
+ * @param {Object} req.body - Course creation data
+ * @param {string} req.body.name - Course name/title
+ * @param {string} [req.body.id] - Optional course identifier
+ * @param {number} req.body.startTime - Course start time (timestamp or time format)
+ * @param {number} req.body.endTime - Course end time (timestamp or time format)
+ * @param {string[]} req.body.days - Array of days when course occurs
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response with created course data
+ * @throws {400} Missing required fields or validation errors
+ * @throws {401} User not authenticated
+ * @throws {500} Internal server error
+ * @example
+ * POST /api/courses
+ * Headers: { Authorization: "Bearer <jwt_token>" }
+ * {
+ *   "name": "Computer Science 101",
+ *   "startTime": 900,
+ *   "endTime": 1050,
+ *   "days": ["Monday", "Wednesday", "Friday"]
+ * }
+ */
 export const createCourse = async (req: AuthRequest, res: Response): Promise<void> => {
     const course = req.body as { name?: string; id?: string; startTime?: number; endTime?: number; days?: string[] };
 
@@ -50,6 +98,33 @@ export const createCourse = async (req: AuthRequest, res: Response): Promise<voi
     }
 };
 
+/**
+ * Updates an existing course for the authenticated user
+ * @description Updates course information with validation and ownership verification
+ * @param {AuthRequest} req - Express request object with authenticated user and course data
+ * @param {User} req.user - Authenticated user object from middleware
+ * @param {string} req.params.id - Course ID to update
+ * @param {Object} req.body - Updated course data
+ * @param {string} [req.body.name] - Updated course name/title
+ * @param {string} [req.body.id] - Updated course identifier
+ * @param {number} [req.body.startTime] - Updated course start time
+ * @param {number} [req.body.endTime] - Updated course end time
+ * @param {string[]} [req.body.days] - Updated array of days when course occurs
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response with updated course data
+ * @throws {401} User not authenticated
+ * @throws {403} User not authorized to update this course
+ * @throws {404} Invalid course ID or course not found
+ * @throws {500} Internal server error
+ * @example
+ * PUT /api/courses/:id
+ * Headers: { Authorization: "Bearer <jwt_token>" }
+ * {
+ *   "name": "Advanced Computer Science",
+ *   "startTime": 930,
+ *   "endTime": 1120
+ * }
+ */
 export const updateCourse = async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     const course = req.body as { name?: string; id?: string; startTime?: number; endTime?: number; days?: string[] };
@@ -85,6 +160,22 @@ export const updateCourse = async (req: AuthRequest, res: Response): Promise<voi
     }
 };
 
+/**
+ * Deletes a course for the authenticated user
+ * @description Removes a course with ownership verification to ensure users can only delete their own courses
+ * @param {AuthRequest} req - Express request object with authenticated user
+ * @param {User} req.user - Authenticated user object from middleware
+ * @param {string} req.params.id - Course ID to delete
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response confirming course deletion
+ * @throws {401} User not authenticated
+ * @throws {403} User not authorized to delete this course
+ * @throws {404} Invalid course ID or course not found
+ * @throws {500} Internal server error
+ * @example
+ * DELETE /api/courses/:id
+ * Headers: { Authorization: "Bearer <jwt_token>" }
+ */
 export const deleteCourse = async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
 

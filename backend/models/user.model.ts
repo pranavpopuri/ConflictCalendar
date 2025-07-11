@@ -1,17 +1,54 @@
+/**
+ * @fileoverview User Model - Database schema and interface for user management
+ * @description Defines the user data structure, validation rules, and authentication methods
+ * for the ConflictCalendar application. Includes password hashing, validation, and
+ * password reset functionality.
+ * @author ConflictCalendar Team
+ * @version 1.0.0
+ */
+
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
+/**
+ * User document interface extending Mongoose Document
+ * @interface IUser
+ * @extends {mongoose.Document}
+ * @description Defines the structure and methods for user documents in MongoDB
+ */
 export interface IUser extends mongoose.Document {
+    /** Unique username for the user (3-50 characters, alphanumeric + underscore) */
     username: string;
+    /** User's email address (unique, validated format) */
     email: string;
+    /** Hashed password (minimum 6 characters before hashing) */
     password: string;
+    /** Optional hashed token for password reset functionality */
     passwordResetToken?: string;
+    /** Optional expiration date for password reset token */
     passwordResetExpires?: Date;
+    /** Document creation timestamp (automatically managed) */
     createdAt: Date;
+
+    /**
+     * Compares a plain text password with the hashed password
+     * @param {string} candidatePassword - Plain text password to verify
+     * @returns {Promise<boolean>} True if password matches, false otherwise
+     */
     comparePassword(candidatePassword: string): Promise<boolean>;
+
+    /**
+     * Generates a password reset token and sets expiration
+     * @returns {string} Plain text reset token (also saves hashed version to database)
+     */
     generatePasswordResetToken(): string;
 }
+
+/**
+ * User schema definition with validation rules
+ * @description Mongoose schema defining user document structure and validation
+ */
 
 const UserSchema = new mongoose.Schema<IUser>({
     username: {
@@ -47,7 +84,12 @@ const UserSchema = new mongoose.Schema<IUser>({
     timestamps: true
 });
 
-// Hash password before saving
+/**
+ * Pre-save middleware to hash passwords
+ * @description Automatically hashes the password before saving to database
+ * @param {Function} next - Mongoose middleware next function
+ * @throws {Error} Bcrypt hashing errors
+ */
 UserSchema.pre<IUser>("save", async function (next) {
     if (!this.isModified("password")) return next();
 
@@ -60,12 +102,28 @@ UserSchema.pre<IUser>("save", async function (next) {
     }
 });
 
-// Method to compare passwords
+/**
+ * Instance method to compare password with hashed version
+ * @description Compares a plain text password with the stored hashed password
+ * @param {string} candidatePassword - The plain text password to verify
+ * @returns {Promise<boolean>} True if passwords match, false otherwise
+ * @example
+ * const isValid = await user.comparePassword('userInputPassword');
+ */
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
     return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Method to generate password reset token
+/**
+ * Instance method to generate password reset token
+ * @description Creates a secure password reset token and sets expiration (10 minutes)
+ * @returns {string} Plain text reset token to be sent via email
+ * @note The hashed version is stored in the database for security
+ * @example
+ * const resetToken = user.generatePasswordResetToken();
+ * await user.save();
+ * // Send resetToken via email
+ */
 UserSchema.methods.generatePasswordResetToken = function (): string {
     const resetToken = crypto.randomBytes(32).toString('hex');
 
@@ -75,4 +133,11 @@ UserSchema.methods.generatePasswordResetToken = function (): string {
     return resetToken;
 };
 
+/**
+ * User model for database operations
+ * @description Mongoose model for user collection with all validation and methods
+ * @example
+ * const user = new User({ username: 'john', email: 'john@example.com', password: 'secret' });
+ * await user.save();
+ */
 export default mongoose.model<IUser>("User", UserSchema);

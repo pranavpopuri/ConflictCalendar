@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Authentication controller for ConflictCalendar application
+ * Handles user registration, login, password reset, and authentication validation
+ * @author ConflictCalendar Team
+ * @version 1.0.0
+ */
+
 import { Request, Response } from "express";
 import { body, validationResult } from "express-validator";
 import User from "../models/user.model";
@@ -5,7 +12,11 @@ import { generateToken, AuthRequest } from "../middleware/auth";
 import emailService from "../services/emailService";
 import crypto from "crypto";
 
-// Validation rules
+/**
+ * Validation rules for user registration
+ * @description Validates username, email, and password fields for new user registration
+ * @type {ValidationChain[]}
+ */
 export const registerValidation = [
     body("username")
         .trim()
@@ -22,6 +33,11 @@ export const registerValidation = [
         .withMessage("Password must be at least 6 characters long")
 ];
 
+/**
+ * Validation rules for user login
+ * @description Validates email and password fields for user authentication
+ * @type {ValidationChain[]}
+ */
 export const loginValidation = [
     body("email")
         .isEmail()
@@ -32,6 +48,11 @@ export const loginValidation = [
         .withMessage("Password is required")
 ];
 
+/**
+ * Validation rules for password reset request
+ * @description Validates email field for password reset initiation
+ * @type {ValidationChain[]}
+ */
 export const passwordResetRequestValidation = [
     body("email")
         .isEmail()
@@ -39,6 +60,11 @@ export const passwordResetRequestValidation = [
         .withMessage("Please enter a valid email")
 ];
 
+/**
+ * Validation rules for password reset completion
+ * @description Validates reset token and new password for password reset completion
+ * @type {ValidationChain[]}
+ */
 export const passwordResetValidation = [
     body("token")
         .notEmpty()
@@ -48,7 +74,25 @@ export const passwordResetValidation = [
         .withMessage("Password must be at least 6 characters long")
 ];
 
-// Register user
+/**
+ * Registers a new user account
+ * @description Creates a new user account with validation and duplicate checking
+ * @param {Request} req - Express request object containing user registration data
+ * @param {string} req.body.username - Unique username (3-50 chars, alphanumeric + underscore)
+ * @param {string} req.body.email - Valid email address
+ * @param {string} req.body.password - Password (minimum 6 characters)
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response with user data and JWT token on success
+ * @throws {400} Validation errors or duplicate username/email
+ * @throws {500} Internal server error
+ * @example
+ * POST /api/auth/register
+ * {
+ *   "username": "johndoe",
+ *   "email": "john@example.com",
+ *   "password": "securepass123"
+ * }
+ */
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
         const errors = validationResult(req);
@@ -111,7 +155,23 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Login user
+/**
+ * Authenticates a user and provides access token
+ * @description Validates user credentials and returns JWT token for authentication
+ * @param {Request} req - Express request object containing login credentials
+ * @param {string} req.body.email - User's registered email address
+ * @param {string} req.body.password - User's password
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response with user data and JWT token on success
+ * @throws {400} Validation errors or invalid credentials
+ * @throws {500} Internal server error
+ * @example
+ * POST /api/auth/login
+ * {
+ *   "email": "john@example.com",
+ *   "password": "securepass123"
+ * }
+ */
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const errors = validationResult(req);
@@ -170,7 +230,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-// Get current user
+/**
+ * Retrieves the currently authenticated user's profile
+ * @description Returns user profile information for the authenticated user
+ * @param {AuthRequest} req - Express request object with authenticated user
+ * @param {User} req.user - Authenticated user object from middleware
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response with user profile data
+ * @throws {401} User not authenticated
+ * @throws {500} Internal server error
+ * @example
+ * GET /api/auth/me
+ * Headers: { Authorization: "Bearer <jwt_token>" }
+ */
 export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
@@ -200,7 +272,22 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
     }
 };
 
-// Request password reset
+/**
+ * Initiates password reset process for a user
+ * @description Generates and sends password reset token via email
+ * @param {Request} req - Express request object containing email
+ * @param {string} req.body.email - Email address for password reset
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response confirming reset email sent
+ * @throws {400} Validation errors
+ * @throws {500} Internal server error
+ * @note Always returns success to prevent email enumeration attacks
+ * @example
+ * POST /api/auth/forgot-password
+ * {
+ *   "email": "john@example.com"
+ * }
+ */
 export const requestPasswordReset = async (req: Request, res: Response): Promise<void> => {
     console.log('🔐 Password reset request received');
     console.log('📧 Request body:', req.body);
@@ -272,7 +359,23 @@ export const requestPasswordReset = async (req: Request, res: Response): Promise
     }
 };
 
-// Reset password
+/**
+ * Completes password reset process with token validation
+ * @description Validates reset token and updates user password
+ * @param {Request} req - Express request object containing reset token and new password
+ * @param {string} req.body.token - Password reset token from email
+ * @param {string} req.body.password - New password (minimum 6 characters)
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response confirming password reset
+ * @throws {400} Validation errors or invalid/expired token
+ * @throws {500} Internal server error
+ * @example
+ * POST /api/auth/reset-password
+ * {
+ *   "token": "abc123...",
+ *   "password": "newsecurepass123"
+ * }
+ */
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
     try {
         const errors = validationResult(req);
@@ -340,7 +443,22 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     }
 };
 
-// Test email endpoint (development only)
+/**
+ * Tests email service configuration (development only)
+ * @description Sends a test email to verify email service is working correctly
+ * @param {Request} req - Express request object containing test email address
+ * @param {string} req.body.email - Email address to send test email to
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response confirming test email sent
+ * @throws {400} Email address required
+ * @throws {500} Email service configuration error
+ * @note This endpoint should only be available in development environment
+ * @example
+ * POST /api/auth/test-email
+ * {
+ *   "email": "test@example.com"
+ * }
+ */
 export const testEmail = async (req: Request, res: Response): Promise<void> => {
     console.log('🧪 Test email endpoint called');
     console.log('📧 Request body:', req.body);

@@ -1,21 +1,56 @@
+/**
+ * @fileoverview Email Service - Handles email functionality for the application
+ * @description Provides email sending capabilities including transporter initialization,
+ * test account creation (Ethereal Email), password reset emails, and general email sending.
+ * Supports both development (Ethereal) and production (SMTP) configurations.
+ * @author ConflictCalendar Team
+ * @version 1.0.0
+ */
+
 import nodemailer from 'nodemailer';
 
+/**
+ * Email configuration options interface
+ * @interface EmailOptions
+ * @description Defines the structure for email sending parameters
+ */
 interface EmailOptions {
+    /** Recipient email address */
     to: string;
+    /** Email subject line */
     subject: string;
+    /** Plain text email content (optional) */
     text?: string;
+    /** HTML email content (optional) */
     html?: string;
 }
 
+/**
+ * Email service class for handling all email operations
+ * @class EmailService
+ * @description Manages email transporter initialization and provides methods for sending emails
+ */
 class EmailService {
+    /** Nodemailer transporter instance */
     private transporter: nodemailer.Transporter | null = null;
+    /** Promise for initialization to prevent multiple initializations */
     private initPromise: Promise<void> | null = null;
 
+    /**
+     * Creates an instance of EmailService
+     * @description Initializes the email service but defers transporter setup until first use
+     */
     constructor() {
         console.log('📧 EmailService constructor called - will initialize on first use');
         // Don't initialize immediately - wait for first use
     }
 
+    /**
+     * Initializes the email transporter if not already initialized
+     * @description Ensures single initialization of the email transporter
+     * @returns {Promise<void>} Promise that resolves when initialization is complete
+     * @private
+     */
     private async initializeTransporter(): Promise<void> {
         if (this.initPromise) {
             return this.initPromise;
@@ -25,6 +60,13 @@ class EmailService {
         return this.initPromise;
     }
 
+    /**
+     * Performs the actual transporter initialization
+     * @description Sets up nodemailer transporter with either Ethereal Email (testing) or SMTP credentials
+     * @returns {Promise<void>} Promise that resolves when transporter is configured
+     * @throws {Error} Configuration or connection errors
+     * @private
+     */
     private async _doInitialize(): Promise<void> {
         console.log('🔧 Initializing email service with configuration:');
         console.log('EMAIL_HOST:', process.env.EMAIL_HOST);
@@ -79,6 +121,23 @@ class EmailService {
         }
     }
 
+    /**
+     * Sends an email using the configured transporter
+     * @description Sends an email with the specified options, handling initialization if needed
+     * @param {EmailOptions} options - Email configuration object
+     * @param {string} options.to - Recipient email address
+     * @param {string} options.subject - Email subject line
+     * @param {string} [options.text] - Plain text email content
+     * @param {string} [options.html] - HTML email content
+     * @returns {Promise<void>} Promise that resolves when email is sent
+     * @throws {Error} Email sending or configuration errors
+     * @example
+     * await emailService.sendEmail({
+     *   to: 'user@example.com',
+     *   subject: 'Welcome!',
+     *   html: '<h1>Welcome to ConflictCalendar</h1>'
+     * });
+     */
     async sendEmail(options: EmailOptions): Promise<void> {
         console.log('📤 sendEmail called with:', { to: options.to, subject: options.subject });
 
@@ -126,6 +185,18 @@ class EmailService {
         }
     }
 
+    /**
+     * Sends a password reset email with a secure reset link
+     * @description Creates and sends a formatted password reset email with both HTML and text content
+     * @param {string} email - Recipient's email address
+     * @param {string} resetToken - Secure password reset token
+     * @returns {Promise<void>} Promise that resolves when reset email is sent
+     * @throws {Error} Email sending or URL configuration errors
+     * @note Reset links expire in 10 minutes for security
+     * @example
+     * const resetToken = user.generatePasswordResetToken();
+     * await emailService.sendPasswordResetEmail('user@example.com', resetToken);
+     */
     async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
         // Determine the correct frontend URL based on environment
         let frontendUrl = process.env.FRONTEND_URL;
@@ -220,4 +291,11 @@ class EmailService {
     }
 }
 
+/**
+ * Email service singleton instance
+ * @description Exported singleton instance of EmailService for application-wide use
+ * @example
+ * import emailService from './services/emailService';
+ * await emailService.sendEmail({ to: 'user@example.com', subject: 'Hello' });
+ */
 export default new EmailService();
