@@ -2,7 +2,12 @@
   "scripts": {
     "dev": "set NODE_ENV=development && tsx backend/server.ts",
     "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "set NODE_ENV=production && tsx backend/server.ts"
+    "start": "set NODE_ENV=production && tsx backend/server.ts",
+    "docs:api": "typedoc",
+    "docs:dev": "cd docs && npm run start",
+    "docs:build": "cd docs && npm run build",
+    "docs:serve": "cd docs && npm run serve",
+    "docs:full": "npm run docs:api && npm run docs:build"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -13,6 +18,8 @@
     "@types/react-big-calendar": "^1.16.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3",
+    "typedoc": "^0.28.7",
+    "typedoc-plugin-markdown": "^4.7.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {

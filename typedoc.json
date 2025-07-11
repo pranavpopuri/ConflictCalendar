@@ -1,0 +1,30 @@
+{
+    "entryPoints": [
+        "./backend/controllers/*.ts",
+        "./backend/models/*.ts",
+        "./backend/services/*.ts",
+        "./backend/middleware/*.ts",
+        "./backend/routes/*.ts",
+        "./frontend/src/components/*.tsx",
+        "./frontend/src/store/*.ts",
+        "./frontend/src/services/*.ts",
+        "./frontend/src/utils/*.ts"
+    ],
+    "entryPointStrategy": "expand",
+    "out": "./docs/docs/api-generated",
+    "plugin": [
+        "typedoc-plugin-markdown"
+    ],
+    "theme": "markdown",
+    "readme": "none",
+    "disableSources": false,
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "excludeExternals": true,
+    "includeVersion": true,
+    "sort": [
+        "source-order"
+    ],
+    "skipErrorChecking": true,
+    "tsconfig": "./tsconfig.json"
+}
